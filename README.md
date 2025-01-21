@@ -1,1 +1,1 @@
-Populate the token.env file with your 
+Populate the token.env file with your Discord token. Do not forget to remove the .txt extension.

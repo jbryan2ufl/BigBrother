@@ -15,8 +15,8 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import matplotlib.pyplot as plt
 
-load_dotenv()
-token = os.getenv('DISCORD_TOKEN')
+load_dotenv("token.env")
+token = str(os.getenv('DISCORD_TOKEN'))
 
 conn = sqlite3.connect('call_logs.db')
 cursor = conn.cursor()
