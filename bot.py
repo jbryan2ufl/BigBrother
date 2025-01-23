@@ -35,15 +35,15 @@ member_dict = {}
 bot_role = None
 
 def get_color_name(hex_code):
-    url = f"https://colornames.org/search/json/?hex={hex_code[1:]}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        return data.get("name")  # Extract the "name" field
-    else:
-        print(f"Error: Received status code {response.status_code}")
-        return None
+	url = f"https://colornames.org/search/json/?hex={hex_code[1:]}"
+	response = requests.get(url)
+	
+	if response.status_code == 200:
+		data = response.json()
+		return data.get("name")  # Extract the "name" field
+	else:
+		print(f"Error: Received status code {response.status_code}")
+		return None
 
 def generate_random_hex_color() -> str:
 	color_int = random.randint(0, 0xFFFFFF)
@@ -100,6 +100,21 @@ def open_call(user_id):
 		VALUES (?)
 	''', (join_time,))
 	conn.commit()
+
+def check_open_call(user_id):
+	cursor.execute(f'''
+		SELECT leave_time
+		FROM user_{user_id}
+		WHERE leave_time IS NULL
+		ORDER BY id DESC
+		LIMIT 1
+	''')
+	result = cursor.fetchone()
+
+	if result is None:
+		return False
+	else:
+		return True
 
 def close_call(user_id):
 	create_user_table(user_id)
@@ -257,11 +272,12 @@ async def on_ready():
 
 	populate_roles_and_members()
 
-	for guild in bot.guilds:
-		for channel in guild.voice_channels:
-			for member in channel.members:
-				user_id = str(member.id)
-				open_call(user_id)
+	for member in guild.members:
+		user_id = str(member.id)
+		if check_open_call(user_id) and not member.voice.channel:
+			close_call(user_id)
+		elif not check_open_call(user_id) and member.voice.channel:
+			open_call(user_id)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
